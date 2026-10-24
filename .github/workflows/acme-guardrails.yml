@@ -125,6 +125,9 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
         run: |
+          # The label must be on the PR right now. Removing qa:approved revokes the sign-off.
+          HAS_LABEL=$(gh api "repos/$REPO/issues/$PR/labels" --jq '[.[].name] | index("qa:approved") != null')
+          if [ "$HAS_LABEL" != "true" ]; then echo "::error::Waiting for QA sign-off (label qa:approved)."; exit 1; fi
           LABELER=$(gh api "repos/$REPO/issues/$PR/events" --paginate \
             --jq '[.[] | select(.event=="labeled" and .label.name=="qa:approved" and .actor.type=="User")] | last | .actor.login // ""')
           if [ -z "$LABELER" ]; then echo "::error::Waiting for QA sign-off (label qa:approved)."; exit 1; fi
