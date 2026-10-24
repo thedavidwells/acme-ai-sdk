@@ -1,0 +1,33 @@
+name: Acme first-contribution task
+description: A scoped task a new engineer (or a Cloud Agent) can take from issue to PR.
+labels: ["acme:task", "acme:requested"]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: Exactly one published package, e.g. @ai-sdk/cartesia
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and user impact
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable behavior, including warnings and errors. Each line should be testable.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Upstream issue, provider docs, sibling implementations to copy patterns from.
+  - type: input
+    id: requester
+    attributes:
+      label: Requested by (PM/QA/DevOps)

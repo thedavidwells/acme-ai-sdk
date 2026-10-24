@@ -1,0 +1,15 @@
+---
+description: Acme overlay for the AI SDK repo. Always on.
+alwaysApply: true
+---
+# Acme core rules (overlay on AGENTS.md; AGENTS.md is the source of truth for repo conventions)
+
+- Read `AGENTS.md` before changing code. Do not restate it; follow it.
+- A first contribution changes exactly one published package under `packages/`, plus its docs page, example, and a changeset.
+- Platform-owned paths are off limits in task work: `.github/`, `.cursor/`, `.agents/`, `skills/`, `tools/`, `AGENTS.md`, root `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `packages/codemod/`, `content/docs/08-migration-guides/`.
+- No new dependencies. Imports in `packages/<pkg>/src` may only use that package's declared dependencies.
+- Changesets are always `patch`.
+- Tests never call real provider APIs and never need secrets. Use `@ai-sdk/test-server` and the file's existing helpers.
+- Before you say you are done, run `node tools/acme/check-contribution.mjs` and the package tests. The stop hook runs the check too.
+- When AGENTS.md and the file you are editing disagree (for example `.optional()` vs `.nullish()` in a provider options schema), match the file and record the conflict under Future Work in the PR. Do not "fix" the convention in a task PR.
+- If the task cannot be done inside these limits, stop and explain. Do not work around a guardrail.

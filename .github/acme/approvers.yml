@@ -1,0 +1,4 @@
+# People allowed to approve agent runs (acme:approved) and QA sign-off (qa:approved).
+# Synthesized for the exercise: in the demo one GitHub account plays PM, QA, and DevOps.
+approvers:
+  - thedavidwells

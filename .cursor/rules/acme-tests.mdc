@@ -1,0 +1,11 @@
+---
+description: Conventions for unit tests.
+globs: "**/*.test.ts"
+alwaysApply: false
+---
+# Test conventions
+
+- Vitest, colocated `kebab-case.test.ts` next to the source file. Fixtures in `__fixtures__/`, snapshots in `__snapshots__/`.
+- Each new behavior gets its own `it(...)` with explicit assertions on the request body, the returned warnings, or the thrown error. Prefer `toMatchObject` / `toStrictEqual` on the request body over snapshots for new options.
+- Use the file's server helpers (for example `prepareAudioResponse()` then `await server.calls[0].requestBodyJson`).
+- Run from the package: `pnpm test` runs node and edge configs. Never commit `.only`.
