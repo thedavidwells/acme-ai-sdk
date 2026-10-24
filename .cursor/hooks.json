@@ -1,10 +1,40 @@
 {
+  "version": 1,
   "hooks": {
     "afterFileEdit": [
       {
         "command": "pnpm fix"
       }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "node tools/acme/hooks/guard-shell.mjs",
+        "matcher": "curl|wget|nc |git push|npm publish|pnpm publish|changeset publish",
+        "timeout": 10,
+        "failClosed": true
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "node tools/acme/hooks/guard-read.mjs",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
+    "stop": [
+      {
+        "command": "node tools/acme/hooks/stop-check.mjs",
+        "timeout": 60,
+        "loop_limit": 3
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "node tools/acme/hooks/guard-write.mjs",
+        "matcher": "Write|Edit|StrReplace|MultiEdit",
+        "timeout": 5,
+        "failClosed": true
+      }
     ]
-  },
-  "version": 1
+  }
 }

@@ -1,0 +1,133 @@
+# Acme guardrails (starter draft). Runs on every PR to main in the fork. Real CI, nothing mocked here.
+# Trigger is pull_request, never pull_request_target: PR code runs with a read-only token and no secrets.
+# A PR that edits this file runs its own edited copy, so the hard control is CODEOWNER review on .github/ (branch protection).
+name: Acme Guardrails
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: acme-guardrails-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  checker-fixtures:
+    name: checker-fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: tools/acme
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Known-good and known-bad diffs behave as expected
+        run: node --test tools/acme/test/*.test.mjs
+
+  guardrails:
+    name: guardrails
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read # issue events API, to see who applied acme:exception
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (same pin as upstream ci.yml)
+        with:
+          fetch-depth: 0
+      - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3 (same pin as upstream ci.yml)
+        with:
+          runtime: node@22
+          cache: true
+          require-lockfile: true
+      - name: PR title follows repo format
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "$TITLE" | grep -Eq '^(feat|fix|chore|docs|test|refactor|perf)\([a-z0-9/-]+\): .+' \
+            || { echo "::error::PR title must look like feat(cartesia): add locale option"; exit 1; }
+      - name: acme:exception counts only when a CODEOWNER (a human, not a bot) applied it
+        id: exception
+        if: contains(github.event.pull_request.labels.*.name, 'acme:exception')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # CODEOWNERS is read from the base branch so the PR cannot add itself as an owner.
+          git show "origin/${{ github.base_ref }}:.github/CODEOWNERS" | grep -o '@[A-Za-z0-9-]*' | tr -d '@' | sort -u > owners.txt
+          BY=$(gh api "repos/$REPO/issues/$PR/events" --paginate \
+            --jq '[.[] | select(.event=="labeled" and .label.name=="acme:exception" and .actor.type=="User")] | last | .actor.login // ""')
+          if [ -n "$BY" ] && grep -qx "$BY" owners.txt; then echo "by=$BY" >> "$GITHUB_OUTPUT"
+          else echo "::warning::acme:exception ignored: not applied by a CODEOWNER (got '${BY:-bot or nobody}')."; fi
+      - name: platform-change counts only when a CODEOWNER (a human, not a bot) applied it
+        id: platform
+        if: contains(github.event.pull_request.labels.*.name, 'platform-change')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Same trust rule as acme:exception: owners come from the base branch, labeler from the issue events API.
+          git show "origin/${{ github.base_ref }}:.github/CODEOWNERS" 2>/dev/null | grep -o '@[A-Za-z0-9-]*' | tr -d '@' | sort -u > owners.txt || true
+          BY=$(gh api "repos/$REPO/issues/$PR/events" --paginate \
+            --jq '[.[] | select(.event=="labeled" and .label.name=="platform-change" and .actor.type=="User")] | last | .actor.login // ""')
+          if [ -n "$BY" ] && grep -qx "$BY" owners.txt; then echo "ok=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "$BY" ] && [ ! -s owners.txt ] && [ "$BY" = "${{ github.repository_owner }}" ]; then
+            echo "::notice::Bootstrap: base branch has no CODEOWNERS yet, so the repo owner's platform-change label counts."; echo "ok=true" >> "$GITHUB_OUTPUT"
+          else echo "::warning::platform-change ignored: not applied by a CODEOWNER (got '${BY:-bot or nobody}'). Running full Acme checks."; fi
+      - name: Acme contribution checks (scope, boundary, conventions, deprecations, changeset, tests)
+        if: steps.platform.outputs.ok != 'true'
+        env:
+          ACME_EXCEPTION_BY: ${{ steps.exception.outputs.by }}
+        run: |
+          set -o pipefail
+          node tools/acme/check-contribution.mjs --base origin/${{ github.base_ref }} | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Detect touched package
+        id: pkg
+        run: |
+          PKG=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | sed -n 's#^packages/\([^/]*\)/.*#\1#p' | sort -u | head -1)
+          echo "name=$PKG" >> "$GITHUB_OUTPUT"
+          [ -n "$PKG" ] && echo "npm=$(node -p "require('./packages/$PKG/package.json').name")" >> "$GITHUB_OUTPUT" || true
+      - name: Lint and format (upstream command)
+        run: pnpm run check
+      - name: Code consistency (upstream konsistent)
+        run: pnpm konsistent
+      - name: Build dependencies of the touched package
+        if: steps.pkg.outputs.npm != ''
+        run: pnpm exec turbo build --filter="${{ steps.pkg.outputs.npm }}^..."
+      - name: Type-check touched package
+        if: steps.pkg.outputs.npm != ''
+        run: pnpm --filter "${{ steps.pkg.outputs.npm }}" type-check
+      - name: Unit tests (node + edge) for touched package
+        if: steps.pkg.outputs.npm != ''
+        run: pnpm --filter "${{ steps.pkg.outputs.npm }}" test
+
+  signoff:
+    name: acme-signoff
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read # issue events API: the trusted record of who applied qa:approved
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/acme
+      - name: QA sign-off recorded by an allowlisted approver
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          LABELER=$(gh api "repos/$REPO/issues/$PR/events" --paginate \
+            --jq '[.[] | select(.event=="labeled" and .label.name=="qa:approved" and .actor.type=="User")] | last | .actor.login // ""')
+          if [ -z "$LABELER" ]; then echo "::error::Waiting for QA sign-off (label qa:approved)."; exit 1; fi
+          grep -qx "  - $LABELER" .github/acme/approvers.yml \
+            || { echo "::error::qa:approved was added by $LABELER, who is not in .github/acme/approvers.yml"; exit 1; }
+          echo "QA sign-off by $LABELER" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,9 @@
+---
+description: Use when writing examples, docs snippets, or code that calls AI SDK core APIs, to avoid deprecated APIs.
+alwaysApply: false
+---
+# Deprecated APIs
+
+- The guardrail check builds its list from `@deprecated` JSDoc on exported symbols in `packages/ai`, `packages/provider`, and `packages/provider-utils`, so the source is the truth, not this file.
+- Common traps for engineers who learned an older SDK version: `generateObject` and `streamObject` (use `generateText` / `streamText` with an `output` setting), `ImagePart` (use `FilePart` with an image media type), `getToolOrDynamicToolName` (use `getToolName`).
+- If you are unsure, open the declaration and read its `@deprecated` note.

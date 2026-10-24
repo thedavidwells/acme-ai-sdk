@@ -1,0 +1,8 @@
+# Platform-owned paths: changes need the platform team (synthesized for the Acme exercise).
+# Hard control only when branch protection has "Require review from Code Owners" on main.
+/.cursor/            @thedavidwells
+/skills/acme-*       @thedavidwells
+/tools/acme/         @thedavidwells
+/.github/            @thedavidwells
+/AGENTS.md           @thedavidwells
+/.github/acme/approvers.yml  @thedavidwells

@@ -1,0 +1,14 @@
+---
+description: Conventions for provider package source files.
+globs: packages/*/src/**/*.ts
+alwaysApply: false
+---
+# Provider package conventions (Acme summary; details in AGENTS.md and contributing/provider-architecture.md)
+
+- Options schemas live in `<provider>-<model-type>-model-options.ts`, wrapped in `lazySchema(() => zodSchema(z.object({...})))`, importing `z` from `zod/v4`. Document each option with a one-line JSDoc that states units, allowed values, and model limits.
+- The model file parses options with `parseProviderOptions({ provider, providerOptions, schema })`.
+- Provider-specific options override the generic call options. When an option makes a generic value unused, push `{ type: 'unsupported', feature: '<name>', details: '...' }` to `warnings`.
+- Mutually exclusive provider options throw `InvalidArgumentError({ argument: 'providerOptions', message })` (see `packages/elevenlabs/src/elevenlabs-transcription-model.ts`).
+- Request-body types live in `<provider>-*-api-types.ts`; add new wire fields there.
+- Never use `JSON.parse`; use `parseJSON` or `safeParseJSON` from `@ai-sdk/provider-utils`.
+- Every `getFromApi` call sets `validateUrl` explicitly (enforced by the `ai-sdk/require-validate-url` lint rule).

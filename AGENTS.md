@@ -322,3 +322,9 @@ When uncertain about expected artifacts, ask for clarification.
 - Use `require()` for imports
 - Add new dependencies without running `pnpm update-references`
 - Modify `content/docs/08-migration-guides` or `packages/codemod` as part of broader codebase changes
+
+## Cursor Cloud specific instructions
+
+- Node 22 and pnpm 11 are already on the login-shell PATH. Dependency install is `pnpm install --frozen-lockfile`. Build published packages with `pnpm build:packages` (this produces `dist`, which examples import). `pnpm build` also builds example apps and is not required for SDK tests or examples.
+- Unit tests import TypeScript source. Rebuild workspace dependencies after changing them; the package under test does not need its own `dist` rebuilt before `pnpm test`.
+- Provider API keys are not required for unit tests or mock examples. From `examples/ai-functions`, `FAIL_ON_ERROR=1 pnpm tsx src/generate-text/mock/basic.ts` runs `generateText` against `MockLanguageModelV3`. Live provider scripts read keys from `examples/ai-functions/.env`.
