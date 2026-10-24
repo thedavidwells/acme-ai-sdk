@@ -36,7 +36,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-      issues: read   # issue events API, to see who applied acme:exception
+      issues: read # issue events API, to see who applied acme:exception
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (same pin as upstream ci.yml)
         with:
@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: read   # issue events API: the trusted record of who applied qa:approved
+      issues: read # issue events API: the trusted record of who applied qa:approved
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

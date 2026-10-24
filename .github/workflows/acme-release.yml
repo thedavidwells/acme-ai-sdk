@@ -35,7 +35,7 @@ jobs:
     needs: build
     if: needs.build.outputs.npm != ''
     runs-on: ubuntu-latest
-    environment: staging   # required reviewer = DevOps (human approval in GitHub)
+    environment: staging # required reviewer = DevOps (human approval in GitHub)
     permissions:
       contents: read
     steps:

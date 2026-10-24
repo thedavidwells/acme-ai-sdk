@@ -16,7 +16,7 @@ jobs:
     if: github.event.label.name == 'acme:approved' && github.event.sender.type == 'User' && contains(github.event.issue.labels.*.name, 'acme:task')
     runs-on: ubuntu-latest
     timeout-minutes: 50
-    environment: agent-launch   # holds CURSOR_API_KEY; restrict the environment to the main branch
+    environment: agent-launch # holds CURSOR_API_KEY; restrict the environment to the main branch
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

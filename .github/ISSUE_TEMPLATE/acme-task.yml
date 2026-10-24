@@ -1,6 +1,6 @@
 name: Acme first-contribution task
 description: A scoped task a new engineer (or a Cloud Agent) can take from issue to PR.
-labels: ["acme:task", "acme:requested"]
+labels: ['acme:task', 'acme:requested']
 body:
   - type: input
     id: package
