@@ -61,14 +61,14 @@ Dashed boxes are planned or not yet run (see the table below). The IDE path is l
 
 **What the checker enforces** (diff-aware, added lines only, so legacy code never blocks a newcomer):
 
-| Check | Fails when |
-|---|---|
-| scope | A platform-owned path changes, or more than one package changes |
-| boundary | A new dependency is added, or an import is not a declared dependency of the package, or a relative import escapes the package |
+| Check      | Fails when                                                                                                                                                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| scope      | A platform-owned path changes, or more than one package changes                                                                                                   |
+| boundary   | A new dependency is added, or an import is not a declared dependency of the package, or a relative import escapes the package                                     |
 | convention | Added `JSON.parse` (use `parseJSON` / `safeParseJSON`), `require()`, or bare `zod` imports. `console.log` and `.optional()` vs `.nullish()` style drift only warn |
-| deprecated | An added line uses a symbol marked `@deprecated` in core packages. The list is computed from JSDoc on every run |
-| changeset | Code changed with no changeset naming the package, or a bump other than patch |
-| tests | Source changed with no new test case, or new tests with no assertions. `.only` fails |
+| deprecated | An added line uses a symbol marked `@deprecated` in core packages. The list is computed from JSDoc on every run                                                   |
+| changeset  | Code changed with no changeset naming the package, or a bump other than patch                                                                                     |
+| tests      | Source changed with no new test case, or new tests with no assertions. `.only` fails                                                                              |
 
 Every finding prints a `Fix:` line in plain English. A CODEOWNER can apply `acme:exception` to turn failures into logged exceptions, except for platform-path failures.
 
@@ -95,35 +95,35 @@ Exit code 0 means pass (warnings allowed). Exit code 1 means at least one failur
 
 **3. Acme Dev Desk bot intents.**
 
-| Intent | Example | What the bot does |
-|---|---|---|
-| Start | "Start a task for @ai-sdk/cartesia: ..." | Collects package, problem, and acceptance criteria, then files an issue from the Acme template |
-| Approve run | "Approve #N" | Shows scope and the checks that will run, asks for explicit approval, then adds `acme:approved` |
-| Status | "Status of #4" | Reads labels, the linked PR, and check runs, then reports the stage, any failures with their messages, and the next human action |
-| QA sign-off | "QA sign-off on #4: checked ..." | Refuses while required checks are red. Otherwise asks for approval, adds `qa:approved`, and posts `QA sign-off by <name>: <what was checked>` |
+| Intent      | Example                                  | What the bot does                                                                                                                             |
+| ----------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Start       | "Start a task for @ai-sdk/cartesia: ..." | Collects package, problem, and acceptance criteria, then files an issue from the Acme template                                                |
+| Approve run | "Approve #N"                             | Shows scope and the checks that will run, asks for explicit approval, then adds `acme:approved`                                               |
+| Status      | "Status of #4"                           | Reads labels, the linked PR, and check runs, then reports the stage, any failures with their messages, and the next human action              |
+| QA sign-off | "QA sign-off on #4: checked ..."         | Refuses while required checks are red. Otherwise asks for approval, adds `qa:approved`, and posts `QA sign-off by <name>: <what was checked>` |
 
 The bot acts as the signed-in person, so the GitHub label actor is the human who approved, not a bot account.
 
 ## Live vs mocked vs planned
 
-| Piece | Status |
-|---|---|
-| Fork pinned to `fce9210`, real task from upstream issue #23430 | Live |
-| Rules overlay, skill, hooks, checker, fixture tests | Live (merged in PR #2) |
-| Local skill run in the Cursor IDE producing a 7-file PR | Live (PR #4) |
-| Hook blocking an edit to a platform-owned path | Live (blocked an attempted edit to the skill's SKILL.md during the run) |
-| CI: `guardrails`, `checker-fixtures` (required), upstream `verify-changesets` (advisory) | Live (green on PR #4, red on PR #5) |
-| Required `acme-signoff` check verifying the label actor against `approvers.yml` | Live (PR #4) |
-| Ruleset `main-protection`: PR required, four required checks, force pushes and deletion blocked | Live |
-| Bot: status and QA sign-off | Live (PR #4, 11:36 AM MT) |
-| Bot: start a task and approve a run end to end | Planned for Sunday (issue #3 was filed from the template in the GitHub UI) |
-| Cloud Agent launched from the `acme:approved` label via the Cursor API (`acme-launch-agent.yml`, `tools/acme/cursor-agent.mjs`) | Planned for tonight, Sat Oct 24 (code merged, not yet run) |
-| PR-review Automation posting one convention review comment | Planned for Sunday |
+| Piece                                                                                                                                    | Status                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Fork pinned to `fce9210`, real task from upstream issue #23430                                                                           | Live                                                                                   |
+| Rules overlay, skill, hooks, checker, fixture tests                                                                                      | Live (merged in PR #2)                                                                 |
+| Local skill run in the Cursor IDE producing a 7-file PR                                                                                  | Live (PR #4)                                                                           |
+| Hook blocking an edit to a platform-owned path                                                                                           | Live (blocked an attempted edit to the skill's SKILL.md during the run)                |
+| CI: `guardrails`, `checker-fixtures` (required), upstream `verify-changesets` (advisory)                                                 | Live (green on PR #4, red on PR #5)                                                    |
+| Required `acme-signoff` check verifying the label actor against `approvers.yml`                                                          | Live (PR #4)                                                                           |
+| Ruleset `main-protection`: PR required, four required checks, force pushes and deletion blocked                                          | Live                                                                                   |
+| Bot: status and QA sign-off                                                                                                              | Live (PR #4, 11:36 AM MT)                                                              |
+| Bot: start a task and approve a run end to end                                                                                           | Planned for Sunday (issue #3 was filed from the template in the GitHub UI)             |
+| Cloud Agent launched from the `acme:approved` label via the Cursor API (`acme-launch-agent.yml`, `tools/acme/cursor-agent.mjs`)          | Planned for tonight, Sat Oct 24 (code merged, not yet run)                             |
+| PR-review Automation posting one convention review comment                                                                               | Planned for Sunday                                                                     |
 | Deploy: build and pack are real, publish is an echo behind a `staging` Environment with DevOps as required reviewer (`acme-release.yml`) | Mocked, and planned for Sunday (workflow merged; Environment not created; not yet run) |
-| Acme people and roles | Synthesized (one account plays PM, QA, and DevOps) |
-| Acme ticketing system | Stand-in (GitHub Issues) |
-| Acme boundaries | Synthesized from real package dependencies plus a platform-owned path list |
-| Bad change on `demo/red-guardrails` | Synthesized on purpose |
+| Acme people and roles                                                                                                                    | Synthesized (one account plays PM, QA, and DevOps)                                     |
+| Acme ticketing system                                                                                                                    | Stand-in (GitHub Issues)                                                               |
+| Acme boundaries                                                                                                                          | Synthesized from real package dependencies plus a platform-owned path list             |
+| Bad change on `demo/red-guardrails`                                                                                                      | Synthesized on purpose                                                                 |
 
 ## Evidence
 
