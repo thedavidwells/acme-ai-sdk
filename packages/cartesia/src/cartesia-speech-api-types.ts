@@ -47,8 +47,21 @@ export type CartesiaSpeechAPITypes = {
 
   /**
    * The language to generate speech in (ISO 639-1 code).
+   * Mutually exclusive with `locale`.
    */
   language?: string;
+
+  /**
+   * Regional locale for the transcript (for example `en-GB`).
+   * Regional locales require Sonic 3.6 or later.
+   * Mutually exclusive with `language`.
+   */
+  locale?: string;
+
+  /**
+   * How text is normalized before it is spoken (`auto`, `off`, or a language or locale code).
+   */
+  normalization?: string;
 
   /**
    * The output audio format.

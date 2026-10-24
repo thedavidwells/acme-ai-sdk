@@ -33,6 +33,18 @@ export const cartesiaSpeechModelOptionsSchema = z.object({
   speed: z.number().min(0.6).max(1.5).nullish(),
   /** The language to generate speech in (ISO 639-1 code). */
   language: z.string().nullish(),
+  /**
+   * Regional locale for the transcript (for example `en-GB`).
+   * Regional locales require Sonic 3.6 or later.
+   * Cannot be set together with `language`.
+   */
+  locale: z.string().nullish(),
+  /**
+   * How text is normalized before it is spoken.
+   * `auto` follows the request locale, `off` skips normalization,
+   * or a language or locale code (for example `en-IN`) pins the normalizer.
+   */
+  normalization: z.string().nullish(),
 });
 
 export type CartesiaSpeechModelOptions = z.infer<

@@ -1,4 +1,8 @@
-import type { SpeechModelV4, SharedV4Warning } from '@ai-sdk/provider';
+import {
+  InvalidArgumentError,
+  type SpeechModelV4,
+  type SharedV4Warning,
+} from '@ai-sdk/provider';
 import {
   combineHeaders,
   createBinaryResponseHandler,
@@ -205,16 +209,36 @@ export class CartesiaSpeechModel implements SpeechModelV4 {
       output_format: outputFormatObject,
     };
 
-    // Map generic language
-    if (language) {
+    const providerLanguage = cartesiaOptions?.language;
+    const providerLocale = cartesiaOptions?.locale;
+
+    if (providerLocale != null && providerLanguage != null) {
+      throw new InvalidArgumentError({
+        argument: 'providerOptions',
+        message:
+          'Cartesia speech `locale` and `language` cannot both be set. Set one or the other.',
+      });
+    }
+
+    // Provider locale replaces language. Provider language overrides the generic value.
+    if (providerLocale != null) {
+      requestBody.locale = providerLocale;
+      if (language) {
+        warnings.push({
+          type: 'unsupported',
+          feature: 'language',
+          details:
+            'Cartesia `locale` was set, so the generic `language` option was ignored.',
+        });
+      }
+    } else if (providerLanguage != null) {
+      requestBody.language = providerLanguage;
+    } else if (language) {
       requestBody.language = language;
     }
 
-    // Provider-specific options override the corresponding generic options.
-    if (cartesiaOptions) {
-      if (cartesiaOptions.language != null) {
-        requestBody.language = cartesiaOptions.language;
-      }
+    if (cartesiaOptions?.normalization != null) {
+      requestBody.normalization = cartesiaOptions.normalization;
     }
 
     const resolvedSpeed = cartesiaOptions?.speed ?? speed;
