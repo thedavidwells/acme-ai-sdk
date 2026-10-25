@@ -35,7 +35,11 @@ jobs:
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           GH_TOKEN: ${{ github.token }}
-        run: echo "agent=$(node tools/acme/cursor-agent.mjs launch --issue ${{ github.event.issue.number }} | tail -1)" >> "$GITHUB_OUTPUT"
+          N: ${{ github.event.issue.number }}
+        run: |
+          AGENT=$(node tools/acme/cursor-agent.mjs launch --issue "$N")
+          case "$AGENT" in bc-*) ;; *) echo "::error::Launch did not return an agent id (got: $AGENT)"; exit 1;; esac
+          echo "agent=$AGENT" >> "$GITHUB_OUTPUT"
       - name: Wait for the run and report back
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
@@ -56,3 +60,12 @@ jobs:
             gh issue edit "$N" --repo "$REPO" --remove-label acme:agent-running --add-label acme:needs-human
             exit 1
           fi
+      - name: Launch failed, hand to a human
+        if: failure() && steps.launch.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh issue comment "$N" --repo "$REPO" --body "Cloud Agent launch failed. Actions run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh issue edit "$N" --repo "$REPO" --add-label acme:needs-human
