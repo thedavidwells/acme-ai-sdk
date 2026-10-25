@@ -50,7 +50,8 @@ jobs:
           set +e
           node tools/acme/cursor-agent.mjs wait --agent "${{ steps.launch.outputs.agent }}" --timeout-min 40 > result.json
           CODE=$?
-          USAGE=$(node tools/acme/cursor-agent.mjs usage --agent "${{ steps.launch.outputs.agent }}" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).totalUsage.totalTokens)}catch{console.log("n/a")}})')
+          # Show tokens only when the usage API reports a positive count. Zeros, a missing field, or a failed call print n/a, never a misleading 0.
+          USAGE=$(node tools/acme/cursor-agent.mjs usage --agent "${{ steps.launch.outputs.agent }}" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{let t;try{t=JSON.parse(s).totalUsage?.totalTokens}catch{}console.log(typeof t==="number"&&t>0?t.toLocaleString("en-US"):"n/a (usage not reported by the API)")})')
           PR=$(node -p "require('./result.json').prUrl || ''")
           if [ $CODE -eq 0 ]; then
             gh issue comment "$N" --repo "$REPO" --body "Agent finished. PR: ${PR:-none}. Tokens: $USAGE. Next: CI guardrails, then QA sign-off."
