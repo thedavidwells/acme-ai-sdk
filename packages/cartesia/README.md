@@ -13,6 +13,8 @@ The Cartesia provider is available in the `@ai-sdk/cartesia` module. You can ins
 npm i @ai-sdk/cartesia
 ```
 
+The provider reads the API key from the `CARTESIA_API_KEY` environment variable.
+
 ## Skill for Coding Agents
 
 If you use coding agents such as Claude Code or Cursor, we highly recommend adding the AI SDK skill to your repository:
