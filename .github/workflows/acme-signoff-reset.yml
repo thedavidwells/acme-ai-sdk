@@ -1,0 +1,25 @@
+# Any new commit on a PR revokes QA sign-off: QA approves a specific commit, not a branch.
+# pull_request (never pull_request_target): branches inside the fork get this write token; fork PRs would not (D22).
+name: Acme Sign-off Reset
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+permissions:
+  issues: write
+  pull-requests: write
+jobs:
+  revoke:
+    if: contains(github.event.pull_request.labels.*.name, 'qa:approved')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Remove qa:approved and say why
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api -X DELETE "repos/$REPO/issues/$PR/labels/qa%3Aapproved" --silent || true
+          gh pr comment "$PR" --repo "$REPO" --body "QA sign-off revoked: commit ${HEAD_SHA:0:7} was pushed after approval. QA must re-approve this commit."

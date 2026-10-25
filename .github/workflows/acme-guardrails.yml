@@ -119,12 +119,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github/acme
-      - name: QA sign-off recorded by an allowlisted approver
+      - name: QA sign-off by an allowlisted approver, for the current commit
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
+          ACTION: ${{ github.event.action }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          # QA approves a commit, not a branch. A push (synchronize) revokes any earlier sign-off:
+          # acme-signoff-reset.yml removes the label, and this run fails for the new head commit.
+          if [ "$ACTION" = "synchronize" ]; then
+            echo "::error::New commits since any earlier QA sign-off. QA must re-approve commit ${HEAD_SHA:0:7} (re-apply qa:approved)."
+            exit 1
+          fi
           # The label must be on the PR right now. Removing qa:approved revokes the sign-off.
           HAS_LABEL=$(gh api "repos/$REPO/issues/$PR/labels" --jq '[.[].name] | index("qa:approved") != null')
           if [ "$HAS_LABEL" != "true" ]; then echo "::error::Waiting for QA sign-off (label qa:approved)."; exit 1; fi
@@ -133,4 +141,4 @@ jobs:
           if [ -z "$LABELER" ]; then echo "::error::Waiting for QA sign-off (label qa:approved)."; exit 1; fi
           grep -qx "  - $LABELER" .github/acme/approvers.yml \
             || { echo "::error::qa:approved was added by $LABELER, who is not in .github/acme/approvers.yml"; exit 1; }
-          echo "QA sign-off by $LABELER" >> "$GITHUB_STEP_SUMMARY"
+          echo "QA sign-off by $LABELER for commit ${HEAD_SHA:0:7}" >> "$GITHUB_STEP_SUMMARY"
