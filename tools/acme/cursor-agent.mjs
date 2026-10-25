@@ -7,8 +7,9 @@
 //   steer  --agent <bc-id> --text "..."         send a steer to the running agent
 //   usage  --agent <bc-id>          token usage (cost visibility)
 // Env: CURSOR_API_KEY (required), GITHUB_REPOSITORY (owner/repo), GH_TOKEN (for gh CLI in Actions).
-// Production gaps (deliberately not solved here): service-account identity, webhooks instead of polling,
+// Production gaps (deliberately not solved here): webhooks instead of polling,
 // retry/backoff policy, central run registry. See DECISIONS.md D9 and D15.
+// Identity: team service-account key (D26).
 import { execFileSync } from 'node:child_process';
 
 const API = 'https://api.cursor.com';
@@ -32,7 +33,7 @@ async function api(method, path, body) {
 async function launch(issueNumber) {
   const issue = JSON.parse(gh(['issue', 'view', issueNumber, '--repo', repo, '--json', 'number,title,body,comments,labels']));
   const marker = issue.comments.map(c => c.body.match(/<!-- acme-agent:(bc-[\w-]+) -->/)).find(Boolean);
-  if (marker) { console.log(`Agent already launched for #${issueNumber}: ${marker[1]}`); return marker[1]; }
+  if (marker) { console.error(`Agent already launched for #${issueNumber}: ${marker[1]}`); return marker[1]; }
   const prompt = [
     `You are working on Acme task #${issue.number} in https://github.com/${repo}.`,
     'Follow the /acme-first-contribution skill in skills/acme-first-contribution/SKILL.md exactly.',
@@ -50,7 +51,6 @@ async function launch(issueNumber) {
   });
   gh(['issue', 'comment', issueNumber, '--repo', repo, '--body', `Cloud Agent launched: ${agent.url}\nRun: ${run.id} (status ${run.status})\n<!-- acme-agent:${agent.id} -->`]);
   gh(['issue', 'edit', issueNumber, '--repo', repo, '--add-label', 'acme:agent-running']);
-  console.log(agent.id);
   return agent.id;
 }
 
@@ -65,7 +65,7 @@ async function wait(agentId, timeoutMin = 40) {
   const deadline = Date.now() + timeoutMin * 60_000;
   for (;;) {
     const s = await status(agentId);
-    console.log(`${new Date().toISOString()} run=${s.runStatus} pr=${s.prUrl ?? '-'}`);
+    console.error(`${new Date().toISOString()} run=${s.runStatus} pr=${s.prUrl ?? '-'}`);
     if (['FINISHED', 'ERROR', 'CANCELLED', 'EXPIRED'].includes(s.runStatus)) return s;
     if (Date.now() > deadline) return { ...s, runStatus: 'TIMEOUT' };
     await new Promise(r => setTimeout(r, 30_000));
