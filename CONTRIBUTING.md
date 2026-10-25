@@ -43,7 +43,7 @@ Use the `feedback` issue type for community feedback, process feedback, or ideas
 ## Improving Documentation
 
 Documentation is crucial for understanding and using our project effectively.
-You can find the content of our docs under [`content`](https://github.com/vercel/ai/tree/main/content).
+You can find the content of our docs under [`content`](https://github.com/thedavidwells/acme-ai-sdk/tree/main/content).
 
 To fix smaller typos, you can edit the code directly in GitHub or use Github.dev (press `.` in Github).
 
