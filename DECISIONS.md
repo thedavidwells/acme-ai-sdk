@@ -1,6 +1,6 @@
 # Decisions (Acme First Contribution Accelerator)
 
-Context: Acme's platform team wants new engineers to land a clean first change in the core library faster, without more review churn or production risk. This repo is a fork of vercel/ai standing in for Acme's core library. Owner: platform team (CODEOWNERS). Status is accepted unless marked Planned. Updated Sat Oct 24, 11:41 AM MT.
+Context: Acme's platform team wants new engineers to land a clean first change in the core library faster, without more review churn or production risk. This repo is a fork of vercel/ai standing in for Acme's core library. Owner: platform team (CODEOWNERS). Status is accepted unless marked Planned. Updated Sun Oct 25, 2026.
 
 ## D1. Stand-in library
 
@@ -58,12 +58,12 @@ Context: Acme's platform team wants new engineers to land a clean first change i
 - **Alternatives considered:** a per-task allowlist file.
 - **Trade-off:** real cross-package work needs a `platform-change` PR or a stop-and-ask.
 
-## D9. How an approved task becomes an agent run (Planned: Block C, Sat night)
+## D9. How an approved task becomes an agent run
 
 - **Decision:** a GitHub Action (`acme-launch-agent.yml`) on `acme:approved` checks the approver, then calls the Cursor Cloud Agents API through `tools/acme/cursor-agent.mjs`. The local IDE path stays available.
 - **Why:** the approval check and the launch live in code next to the repo. Launches are idempotent through an issue marker, any front door can trigger one, and token usage is reported per task.
 - **Alternatives considered:** an Automation on the issue label; Grok Bot delegating directly to a Cloud Agent; local runs only.
-- **Trade-off:** there is one API key to protect (in an Environment secret), and the launcher polls until webhooks ship. Code is merged but has not run yet.
+- **Trade-off:** there is one API key to protect (in an Environment secret), and the launcher polls until webhooks ship. It ran once end to end on Oct 24 (issue #10 to PR #11). The token count it reports is not real yet (0).
 
 ## D10. Where approvals are recorded
 
@@ -100,21 +100,21 @@ Context: Acme's platform team wants new engineers to land a clean first change i
 - **Alternatives considered:** #23488 (Azure transcription options), which needs design judgment and is too big to run live.
 - **Trade-off:** someone else's PR already implements the feature. The evaluation is the workflow, not the feature.
 
-## D15. Agent status mechanism (Planned with D9)
+## D15. Agent status mechanism
 
 - **Decision:** poll `GET /v1/agents/{id}/runs/{runId}` every 30 s, with a timeout.
 - **Why:** Cloud Agents API v1 webhooks are not available yet.
 - **Alternatives considered:** webhooks.
 - **Trade-off:** extra API calls and latency. Switch when webhooks ship.
 
-## D16. Deploy (Planned: Sunday)
+## D16. Deploy (Planned)
 
 - **Decision:** a real build and pack, then a mocked publish gated by a `staging` GitHub Environment with DevOps as the required reviewer (`acme-release.yml`).
 - **Why:** it shows the path to production and the human gate without faking a release.
 - **Alternatives considered:** no deploy step; publishing to a real registry.
 - **Trade-off:** the publish is an echo, labeled as mocked. The workflow is merged, but the Environment does not exist yet.
 
-## D17. Automated review (Planned: Sunday)
+## D17. Automated review (Planned)
 
 - **Decision:** a custom PR-review Automation that only comments, with Memories off. Bugbot is optional, with `.cursor/BUGBOT.md`.
 - **Why:** it can be tuned to Acme conventions, `.cursor/rules` do not apply to Bugbot, and cost stays under control.
@@ -176,3 +176,17 @@ Context: Acme's platform team wants new engineers to land a clean first change i
 - **Why:** it only triggers on PRs that touch `packages/` or `.changeset/`. On a workflow-only PR ([PR #6](https://github.com/thedavidwells/acme-ai-sdk/pull/6)) it never reported, so the ruleset waited forever. The checker's `[changeset]` rule inside `guardrails` covers the same risk and runs on every PR.
 - **Alternatives considered:** removing the path filter from the upstream workflow (diverges from upstream), or admin bypass on platform PRs (weakens the audit trail).
 - **Trade-off:** upstream's own changeset check becomes advisory. If Acme wants it enforced, give it a no-op job that always reports so it can be required safely.
+
+## D26. Team service-account API key for the launcher (Planned)
+
+- **Decision:** in production, the launcher uses a dedicated team service-account API key, stored as `CURSOR_API_KEY` in the `agent-launch` Environment (deployment branch `main` only). The live demo run (issue #10 to PR #11) used my personal Cursor API key in that same secret.
+- **Why:** a launch key should have least privilege, not be tied to one person, be rotatable without breaking anyone's login, and make agent work attributable to the automation rather than to a human.
+- **Alternatives considered:** a personal API key tied to one user's login (what the demo uses today).
+- **Trade-off:** with a personal key, agent PRs are authored as the key owner (PR #11 shows `thedavidwells`), which overlaps with self sign-off because that same person can apply `qa:approved`. The launcher only calls agent endpoints (`POST /v1/agents` and run status/usage), so switching keys is a secret change, not a code change. Until it switches, the `tools/acme/cursor-agent.mjs` header ("Identity: team service-account key (D26)") overstates the demo.
+
+## D27. QA sign-off is bound to the current commit
+
+- **Decision:** any push to a PR revokes QA sign-off. On `synchronize`, the `acme-signoff` job fails for the new head commit, and `acme-signoff-reset.yml` removes `qa:approved` and comments which commit was pushed. QA re-applies the label to approve the new commit ([PR #8](https://github.com/thedavidwells/acme-ai-sdk/pull/8)).
+- **Why:** QA approves a specific commit, not a branch. Without this, a sign-off on one commit would still count after new code landed. The failing `synchronize` run turns the check red right away, with no race against the reset job, and the reset makes the label state true for the bot and later runs.
+- **Alternatives considered:** comparing the label time with the head commit's committer date (whoever makes a commit sets that date, so it can be wrong or backdated); requiring a fresh PR review approval (one account can't approve its own PR).
+- **Trade-off:** the reset workflow needs a label write token. It uses `pull_request` (never `pull_request_target`), so it gets write access only for branches inside the fork, which is our model (D22). A label removed by the workflow token doesn't start a new run, which is fine because the push run already failed. Self sign-off is still possible in the demo, and the job reads `approvers.yml` from the PR's merge ref, not main (see ACME.md Known limits).
