@@ -31,6 +31,8 @@ import { cartesia } from '@ai-sdk/cartesia';
 
 ## Example
 
+### Speech generation
+
 ```ts
 import { cartesia } from '@ai-sdk/cartesia';
 import { generateSpeech } from 'ai';
@@ -39,6 +41,19 @@ const { audio } = await generateSpeech({
   model: cartesia.speech('sonic-3.5'),
   text: 'Hello from the Vercel AI SDK!',
   voice: 'a0e99841-438c-4a64-b679-ae501e7d6091',
+});
+```
+
+### Transcription
+
+```ts
+import { cartesia } from '@ai-sdk/cartesia';
+import { transcribe } from 'ai';
+import { readFile } from 'node:fs/promises';
+
+const { text } = await transcribe({
+  model: cartesia.transcription('ink-whisper'),
+  audio: await readFile('audio.mp3'),
 });
 ```
 
