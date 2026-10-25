@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Acme launcher for Cursor Cloud Agents (Cloud Agents API v1, public beta). Starter draft.
+// Acme launcher for Cursor Cloud Agents (Cloud Agents API v1, public beta).
 // Commands:
 //   launch --issue <n>              create an agent for an approved GitHub issue (idempotent via issue marker)
 //   status --agent <bc-id>          print agent + latest run status and PR URL

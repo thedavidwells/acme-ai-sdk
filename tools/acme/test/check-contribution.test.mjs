@@ -23,6 +23,8 @@ function makeRepo() {
   write('packages/cartesia/src/cartesia-speech-model.test.ts', "import { it, expect } from 'vitest';\nit('speaks', () => { expect(1).toBe(1); });\n");
   write('packages/openai/package.json', JSON.stringify({ name: '@ai-sdk/openai' }));
   write('packages/openai/src/index.ts', 'export const x = 1;\n');
+  // Same @deprecated JSDoc shape as the real packages/ai/src/generate-object/generate-object.ts, so the registry indexes it.
+  write('packages/ai/src/generate-object/generate-object.ts', "/**\n * Generate a structured object.\n *\n * @deprecated Use `generateText` with an `output` setting instead.\n */\nexport async function generateObject() {\n  return {};\n}\n");
   git('add', '-A');
   git('commit', '-qm', 'baseline');
   git('checkout', '-qb', 'task');
@@ -37,7 +39,7 @@ function run(dir, env = {}) {
 function goodChange(repo) {
   repo.append('packages/cartesia/src/cartesia-speech-model-options.ts', 'export const locale = z.string().nullish();\n');
   repo.append('packages/cartesia/src/cartesia-speech-model.ts', 'export const withLocale = true;\n');
-  repo.append('packages/cartesia/src/cartesia-speech-model.test.ts', "it('sends locale', () => { expect(true).toBe(true); });\n");
+  repo.append('packages/cartesia/src/cartesia-speech-model.test.ts', "import { withLocale } from './cartesia-speech-model';\nit('sends locale', () => { expect(withLocale).toBe(true); });\n");
   repo.write('.changeset/cartesia-locale.md', "---\n'@ai-sdk/cartesia': patch\n---\n\nAdd locale option.\n");
 }
 
@@ -46,7 +48,16 @@ test('known-good diff passes with no failures', () => {
   goodChange(repo);
   const { code, out } = run(repo.dir);
   assert.equal(code, 0, JSON.stringify(out.failures));
-  assert.equal(out.failures.length, 0);
+  assert.deepEqual(out.failures, []);
+  assert.deepEqual(out.warnings, []);
+  assert.deepEqual(out.packages, ['cartesia']);
+  assert.deepEqual([...out.changed].sort(), [
+    '.changeset/cartesia-locale.md',
+    'packages/cartesia/src/cartesia-speech-model-options.ts',
+    'packages/cartesia/src/cartesia-speech-model.test.ts',
+    'packages/cartesia/src/cartesia-speech-model.ts',
+  ]);
+  assert.equal(out.deprecatedSymbolsIndexed, 1);
 });
 
 test('known-bad diff fails on scope, boundary, convention, changeset, and tests', () => {
@@ -57,6 +68,17 @@ test('known-bad diff fails on scope, boundary, convention, changeset, and tests'
   assert.equal(code, 1);
   const checks = new Set(out.failures.map(f => f.check));
   for (const c of ['scope', 'boundary', 'convention', 'changeset', 'tests']) assert.ok(checks.has(c), `expected a ${c} failure`);
+});
+
+test('deprecated API usage fails with the @deprecated hint', () => {
+  const repo = makeRepo();
+  goodChange(repo);
+  repo.append('packages/cartesia/src/cartesia-speech-model.ts', 'export const legacyGenerate = generateObject;\n');
+  const { code, out } = run(repo.dir);
+  assert.equal(code, 1);
+  assert.deepEqual(out.failures.map(f => f.check), ['deprecated']);
+  assert.ok(out.failures[0].msg.includes('`generateObject`'), out.failures[0].msg);
+  assert.equal(out.failures[0].fix, 'Use `generateText` with an `output` setting instead.');
 });
 
 test('.optional() in a .nullish() options file warns but never blocks (D18)', () => {

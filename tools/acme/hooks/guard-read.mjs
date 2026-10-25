@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// beforeReadFile hook (starter draft). Keeps secrets out of agent context.
+// beforeReadFile hook. Keeps secrets out of agent context.
 import fs from 'node:fs';
 let input = {};
 try { input = JSON.parse(fs.readFileSync(0, 'utf8') || '{}'); } catch {}

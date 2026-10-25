@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cursor stop hook (starter draft). Runs the Acme guardrail check when the agent finishes a turn.
+// Cursor stop hook. Runs the Acme guardrail check when the agent finishes a turn.
 // On failure it returns followup_message so the agent fixes the findings, bounded by loop_limit in hooks.json.
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';

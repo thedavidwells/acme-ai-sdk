@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// beforeShellExecution hook (starter draft). Denies network fetches to hosts outside the allowlist,
+// beforeShellExecution hook. Denies network fetches to hosts outside the allowlist,
 // force pushes, pushes to main, and package publishing. failClosed: true in hooks.json.
 import fs from 'node:fs';
 const ALLOWED_HOSTS = ['registry.npmjs.org', 'github.com', 'api.github.com', 'codeload.github.com'];
