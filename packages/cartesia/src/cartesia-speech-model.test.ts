@@ -1,3 +1,4 @@
+import { InvalidArgumentError } from '@ai-sdk/provider';
 import { createTestServer } from '@ai-sdk/test-server/with-vitest';
 import { describe, expect, it, vi } from 'vitest';
 import { createCartesia } from './cartesia-provider';
@@ -113,9 +114,79 @@ describe('CartesiaSpeechModel', () => {
         language: 'es',
       });
 
-      expect(await server.calls[0].requestBodyJson).toMatchObject({
+      const body = await server.calls[0].requestBodyJson;
+      expect(body).toMatchObject({
         transcript: 'Hola, mundo!',
         language: 'es',
+      });
+      expect(body).not.toHaveProperty('locale');
+    });
+
+    it('should send provider locale and normalization', async () => {
+      prepareAudioResponse();
+
+      await model.doGenerate({
+        text: 'Hello, world!',
+        voice: 'test-voice-id',
+        providerOptions: {
+          cartesia: {
+            locale: 'en-GB',
+            normalization: 'en-US',
+          },
+        },
+      });
+
+      const body = await server.calls[0].requestBodyJson;
+      expect(body).toMatchObject({
+        locale: 'en-GB',
+        normalization: 'en-US',
+      });
+      expect(body).not.toHaveProperty('language');
+    });
+
+    it('should throw when provider locale and language are both set', async () => {
+      prepareAudioResponse();
+
+      await expect(
+        model.doGenerate({
+          text: 'Hello, world!',
+          voice: 'test-voice-id',
+          providerOptions: {
+            cartesia: {
+              locale: 'en-GB',
+              language: 'en',
+            },
+          },
+        }),
+      ).rejects.toBeInstanceOf(InvalidArgumentError);
+
+      expect(server.calls).toHaveLength(0);
+    });
+
+    it('should send locale and warn when generic language is also set', async () => {
+      prepareAudioResponse();
+
+      const result = await model.doGenerate({
+        text: 'Hello, world!',
+        voice: 'test-voice-id',
+        language: 'en',
+        providerOptions: {
+          cartesia: {
+            locale: 'en-GB',
+          },
+        },
+      });
+
+      const body = await server.calls[0].requestBodyJson;
+      expect(body).toMatchObject({
+        locale: 'en-GB',
+      });
+      expect(body).not.toHaveProperty('language');
+      expect(result.warnings).toContainEqual({
+        type: 'unsupported',
+        feature: 'language',
+        details:
+          'Cartesia `locale` was set, so the generic `language` option was ignored.',
       });
     });
 

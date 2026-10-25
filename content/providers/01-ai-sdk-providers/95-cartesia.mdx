@@ -151,7 +151,37 @@ The following provider options are available:
 - **language** _string_
 
   The language to generate speech in (ISO 639-1 code).
+  Optional. Cannot be set together with `locale`.
+
+- **locale** _string_
+
+  Regional locale for the transcript (for example `en-GB`).
+  Regional locales require Sonic 3.6 or later.
+  Optional. Cannot be set together with `language`.
+
+- **normalization** _string_
+
+  How text is normalized before it is spoken.
+  `auto` follows the request locale, `off` skips normalization,
+  or a language or locale code (for example `en-IN`) pins the normalizer.
   Optional.
+
+```ts highlight="6-9"
+import { generateSpeech } from 'ai';
+import { cartesia, type CartesiaSpeechModelOptions } from '@ai-sdk/cartesia';
+
+const result = await generateSpeech({
+  model: cartesia.speech('sonic-3.6'),
+  text: 'The meeting is on 04/20/2026 at 7:00 PM.',
+  voice: '694f9389-aac1-45b6-b726-9d9369183238',
+  providerOptions: {
+    cartesia: {
+      locale: 'en-GB',
+      normalization: 'en-US',
+    } satisfies CartesiaSpeechModelOptions,
+  },
+});
+```
 
 ### Model Capabilities
 
