@@ -12,6 +12,7 @@ The Cartesia provider is available in the `@ai-sdk/cartesia` module. You can ins
 ```bash
 npm i @ai-sdk/cartesia
 ```
+Set the CARTESIA_KEY environment variable before running the example. 
 
 ## Skill for Coding Agents
 
