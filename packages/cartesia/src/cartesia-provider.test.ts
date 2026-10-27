@@ -13,7 +13,7 @@ describe('createCartesia', () => {
     const provider = createCartesia({ apiKey: 'test-api-key' });
 
     expect(provider.speech('sonic-3.5')).toBeInstanceOf(CartesiaSpeechModel);
-    expect(provider.speechModel('sonic-3.5')).toBeInstanceOf(
+    expect(provider.speechModel?.('sonic-3.5')).toBeInstanceOf(
       CartesiaSpeechModel,
     );
     expect(provider('sonic-3.5').speech).toBeInstanceOf(CartesiaSpeechModel);
@@ -25,7 +25,7 @@ describe('createCartesia', () => {
     expect(provider.transcription('ink-whisper')).toBeInstanceOf(
       CartesiaTranscriptionModel,
     );
-    expect(provider.transcriptionModel('ink-whisper')).toBeInstanceOf(
+    expect(provider.transcriptionModel?.('ink-whisper')).toBeInstanceOf(
       CartesiaTranscriptionModel,
     );
   });
