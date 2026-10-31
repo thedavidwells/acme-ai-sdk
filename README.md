@@ -1,6 +1,14 @@
 # Acme AI SDK
 
-This fork of [Vercel’s AI SDK](https://github.com/vercel/ai) is the stand-in for Acme’s core library: a TypeScript monorepo with one interface for many model providers. Published packages live under `packages/`. How they depend on each other is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Package usage examples stay in [packages/ai/README.md](packages/ai/README.md).
+This fork of [Vercel’s AI SDK](https://github.com/vercel/ai) is the stand-in for Acme’s core library: a TypeScript monorepo with one interface for many model providers. Published packages live under `packages/`. Package usage examples stay in [packages/ai/README.md](packages/ai/README.md).
+
+## Understand the codebase
+
+Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). It has two diagrams: which packages import which, and one OpenAI chat call through `generateText`. The slide snapshot of the package diagram is [docs/architecture-packages.svg](docs/architecture-packages.svg).
+
+In Cursor, run `/acme-codebase-tour` for a read-only orientation. The skill is stored at [`skills/acme-codebase-tour/SKILL.md`](skills/acme-codebase-tour/SKILL.md) and exposed through the repository skill links. Add a package or task if you already know the area. If it is not visible in an existing session, reload the Cursor window and start a new chat. The tour does not implement the change. Implementation stays on `/acme-first-contribution`, which now includes a brief architecture orientation.
+
+How to open the diagrams from the repo, and how that differs from reopening a saved local canvas, is in the guide under “Opening this map.” The canvas is not published.
 
 ## Run
 

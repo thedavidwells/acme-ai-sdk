@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="760" viewBox="0 0 1100 760">
+  <title>AI SDK package imports</title>
+  <desc>Arrowhead points at the package that lists the tail in dependencies. Snapshot of the package diagram in docs/ARCHITECTURE.md.</desc>
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1d4e89"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="760" fill="#ffffff"/>
+  <text x="32" y="36" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" fill="#1c1917">Package imports</text>
+  <text x="32" y="60" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#44403c">Arrowhead points at the importer. The tail package is listed in that importer dependencies.</text>
+  <text x="32" y="80" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#44403c">Dev-dependencies are omitted. Same edges as the Mermaid diagram in docs/ARCHITECTURE.md.</text>
+
+  <!-- edges drawn first, under the boxes -->
+  <g fill="none" stroke="#1d4e89" stroke-width="1.6" marker-end="url(#arr)">
+    <line x1="550" y1="148" x2="550" y2="188"/>
+    <line x1="470" y1="130" x2="200" y2="268"/>
+    <line x1="500" y1="228" x2="230" y2="268"/>
+    <line x1="630" y1="130" x2="860" y2="268"/>
+    <line x1="600" y1="228" x2="840" y2="268"/>
+    <line x1="500" y1="140" x2="330" y2="418"/>
+    <line x1="520" y1="236" x2="360" y2="418"/>
+    <line x1="250" y1="316" x2="340" y2="418"/>
+    <line x1="600" y1="140" x2="760" y2="418"/>
+    <line x1="580" y1="236" x2="740" y2="418"/>
+    <line x1="820" y1="316" x2="780" y2="418"/>
+    <line x1="300" y1="466" x2="200" y2="558"/>
+    <line x1="420" y1="466" x2="620" y2="558"/>
+    <line x1="520" y1="148" x2="680" y2="558"/>
+    <line x1="560" y1="236" x2="660" y2="558"/>
+  </g>
+
+  <g font-family="ui-sans-serif, system-ui, sans-serif" text-anchor="middle">
+    <rect x="430" y="100" width="240" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="550" y="120" font-size="15" fill="#1c1917">@ai-sdk/provider</text>
+    <text x="550" y="138" font-size="12" fill="#44403c">packages/provider</text>
+
+    <rect x="430" y="190" width="240" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="550" y="210" font-size="15" fill="#1c1917">@ai-sdk/provider-utils</text>
+    <text x="550" y="228" font-size="12" fill="#44403c">packages/provider-utils</text>
+
+    <rect x="70" y="270" width="240" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="190" y="290" font-size="15" fill="#1c1917">@ai-sdk/gateway</text>
+    <text x="190" y="308" font-size="12" fill="#44403c">packages/gateway</text>
+
+    <rect x="760" y="270" width="280" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="900" y="290" font-size="15" fill="#1c1917">shared HTTP stacks</text>
+    <text x="900" y="308" font-size="12" fill="#44403c">openai-compatible, open-responses</text>
+
+    <rect x="200" y="420" width="240" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="320" y="440" font-size="15" fill="#1c1917">ai</text>
+    <text x="320" y="458" font-size="12" fill="#44403c">packages/ai</text>
+
+    <rect x="640" y="420" width="260" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="770" y="440" font-size="15" fill="#1c1917">provider adapters</text>
+    <text x="770" y="458" font-size="12" fill="#44403c">openai and other folders</text>
+
+    <rect x="70" y="560" width="280" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="210" y="580" font-size="15" fill="#1c1917">UI packages</text>
+    <text x="210" y="598" font-size="12" fill="#44403c">react, vue, svelte, angular, rsc</text>
+
+    <rect x="500" y="560" width="300" height="48" rx="6" fill="#f5f5f4" stroke="#1c1917"/>
+    <text x="650" y="580" font-size="15" fill="#1c1917">harness packages</text>
+    <text x="650" y="598" font-size="12" fill="#44403c">harness, harness-*, sandbox-*</text>
+  </g>
+
+  <text x="32" y="660" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#44403c">OpenAI depends on provider and provider-utils only. Some other adapters also depend on a shared HTTP stack.</text>
+  <text x="32" y="682" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#44403c">ai lists @ai-sdk/openai as a devDependency for tests. That edge is not drawn.</text>
+  <text x="32" y="704" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#44403c">Checked at git 42a72a08ef on docs/architecture-diagram.</text>
+</svg>
